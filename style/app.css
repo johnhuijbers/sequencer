@@ -1,0 +1,93 @@
+@import "scrollbars.css";
+@import "btn.css";
+@import "menu.css";
+
+* {
+    box-sizing: border-box;
+    font-family: 'Nunito', sans-serif;
+    color: white;
+    cursor: default;
+}
+body {
+    -webkit-user-select: none;  /* Chrome all / Safari all */
+    -moz-user-select: none;     /* Firefox all */
+    -ms-user-select: none;      /* IE 10+ */
+    user-select: none;          /* Likely future */
+    padding: 0;
+    margin: 0;
+}
+#keyboard * {
+    box-sizing: content-box;
+}
+.main-content {
+    height: calc(100% - 150px);
+    overflow: auto;
+}
+.main-window {
+    height: calc(100vh - 50px - 30px);
+    background: #363636;
+    overflow: hidden;
+}
+.transport {
+    height: 50px;
+    padding: 10px;
+    background: black;
+}
+.track {
+    height: 125px;
+    width: 100%;
+    background: #595959;
+    border-bottom: 1px solid dimgray;
+    margin-bottom: 15px;
+    position: relative;
+}
+.track.selected {
+    height: 500px;
+}
+.track.selected .head {
+    background: blue;
+}
+.track.bus {
+    height: 70px;
+}
+.track .head {
+    position: absolute;
+    width: 200px;
+    height: 100%;
+    border-right: 1px solid dimgray;
+    padding: 5px;
+}
+.track .head .label {
+    text-transform: capitalize;
+    display: block;
+    margin-right: 2px;
+    text-align: center;
+    float: left;
+    flex-grow: 70;
+}
+.track .head .top {
+    display: flex;
+    flex-direction: row;
+}
+.notes-container {
+    float: right;
+    width: calc(100% - 200px);
+    height: 100%;
+    overflow: auto;
+}
+.track .head .meter {
+    height: 15px;
+    width: 100%;
+    margin-top: 2px;
+    border-right: 1px solid darkslategray;
+    border-bottom: 1px solid darkslategray;
+}
+.track .head .top .btn {
+    flex-grow: 15;
+}
+#keyboard {
+    background: black
+}
+.Slider {
+    position: relative;
+}

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+	<title>Synth</title>
+
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <link href="https://fonts.googleapis.com/css?family=Nunito" rel="stylesheet">
+	<link rel="icon" type="image/png" sizes="174x174" href="style/favicon.png">
+
+    <script type="text/javascript">
+        TONE_SILENCE_VERSION_LOGGING = true;
+    </script>
+	<script type="text/javascript" src="build/Tone.js"></script>
+	<script type="text/javascript" src="build/MidiConvert.js"></script>
+	<script type="text/javascript" src="scripts/jquery.min.js"></script>
+	<script type="text/javascript" src="scripts/draggabilly.js"></script>
+	<script type="text/javascript" src="scripts/StartAudioContext.js"></script>
+	<script type="text/javascript" src="scripts/qwerty-hancock.js"></script>
+    <script type="text/javascript" src="./scripts/Interface.js"></script>
+    <link href="style/app.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+	<script type="text/javascript" src="js/app.js"></script>
+
+    <div id="main-menu" class="menu"></div>
+    <div class="main-window">
+        <div class="main-content">
+            <div class="track-container"></div>
+        </div>
+        <div id="keyboard"></div>
+    </div>
+
+    <div class="transport"></div>
+</body>
+</html>

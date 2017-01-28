@@ -1,0 +1,90 @@
+.btn {
+    display: inline-block;
+    padding: 2px;
+    border-right: 1px solid darkslategray;
+    border-bottom: 1px solid darkslategray;
+    cursor: pointer;
+}
+.btn:hover {
+    -webkit-filter: brightness(120%); /* Safari */
+    filter: brightness(120%);
+}
+.btn:active {
+    -webkit-filter: brightness(50%); /* Safari */
+    filter: brightness(50%);
+}
+.btn-add-channel {
+    width: 60px;
+    height: 20px;
+    content: "+"
+}
+
+.head .btn {
+    height: 20px;
+    width: 20px;
+    padding: 0;
+    text-align: center;
+    line-height: 20px;
+    margin-right: 2px;
+}
+
+.btn-enabled {
+    background: green;
+    color: lawngreen;
+}
+.btn-enabled.disabled {
+    background: gray;
+}
+.btn-armed {
+    background: gray;
+}
+.btn-armed.armed {
+    background: green;
+    color: lawngreen;
+}
+
+.transport .btn {
+    width: 70px;
+    height: 30px;
+    background: grey;
+    text-align: center;
+    line-height: 25px;
+    border-radius: 5px;
+    color: darkslategray;
+    font-size: 27px;
+}
+.transport .btn-stop {
+    font-size: 32px;
+    line-height: 22px;
+}
+.slider {
+    width: 100%;
+    height: 30px;
+}
+.slider .scrub {
+    position: relative;
+    background: black;
+}
+.slider .knob{
+    background: white;
+    border-radius: 10px;
+    height: 15px;
+    width: 15px;
+    position: absolute;
+    top: 0px;
+    left: calc(100% - 15px);
+}
+
+.Dragger #Name {
+    display: none;
+}
+.Dragger {
+    width: 15px;
+    height: 15px;
+    position: absolute;
+    background-color: black;
+    border-radius: 50%;
+    z-index: 1;
+    margin-top: -2px;
+    border: 2px solid white;
+    cursor: -webkit-grab; }
