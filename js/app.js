@@ -368,6 +368,8 @@ var App = {
       parent: this.transportNode
     });
 
+    StartAudioContext(Tone.context, ".btn-play");
+
     this.btnPlay = $("<div class='btn btn-play'>►</div>").appendTo(this.transportNode);
     this.btnPlay.click(this.play.bind(this));
 
