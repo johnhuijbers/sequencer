@@ -30,7 +30,7 @@ define([
       this.initKeyboard();
       this.initMenu();
 
-      this.loadProject("track.mid");
+      this.loadProject("midi/bwv772.mid");
     },
 
     loadProject: function(file){
@@ -128,6 +128,7 @@ define([
       this.tracks.forEach(function(track){
         if (this.armed){
           track.instrument.source.triggerAttack(frequency);
+          track.instrument.filterEnv.triggerAttack(frequency);
         }
       });
     },

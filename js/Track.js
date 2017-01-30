@@ -2,7 +2,7 @@ define([
   "Tone",
   "jquery",
   "./TrackType",
-  "./Synth",
+  "./SubtractorSynth",
   "./Interface"
 ], function(
   Tone,
@@ -11,13 +11,29 @@ define([
   Synth,
   Interface
 ){
-  function getRandomColor() {
-    var letters = '0123456789ABCDEF';
-    var color = '#';
-    for (var i = 0; i < 6; i++ ) {
-      color += letters[Math.floor(Math.random() * 16)];
+  var percentColors = [
+    { pct: 0.0, color: { r: 0xff, g: 0xff, b: 0xff } },
+    { pct: 1.0, color: { r: 0xff, g: 0x00, b: 0x00 } } ];
+
+  var getColorForPercentage = function(pct) {
+    for (var i = 1; i < percentColors.length - 1; i++) {
+      if (pct < percentColors[i].pct) {
+        break;
+      }
     }
-    return color;
+    var lower = percentColors[i - 1];
+    var upper = percentColors[i];
+    var range = upper.pct - lower.pct;
+    var rangePct = (pct - lower.pct) / range;
+    var pctLower = 1 - rangePct;
+    var pctUpper = rangePct;
+    var color = {
+      r: Math.floor(lower.color.r * pctLower + upper.color.r * pctUpper),
+      g: Math.floor(lower.color.g * pctLower + upper.color.g * pctUpper),
+      b: Math.floor(lower.color.b * pctLower + upper.color.b * pctUpper)
+    };
+    return 'rgb(' + [color.r, color.g, color.b].join(',') + ')';
+    // or output as hex if preferred
   }
 
   /**
@@ -97,67 +113,110 @@ define([
       loop();
 
       if (this.part)
-        this.drawNotes();
+        this.drawNoteEditor();
     },
 
     createCanvas: function(){
+      this.midiDuration = new Tone.TransportTime(this.midi.duration);
+      this.barCount = parseInt(this.midiDuration.toBarsBeatsSixteenths().split(':')[0])+1;
+      this.beatCount = this.barCount * Tone.Transport.timeSignature;
+      this.noteCount = 127;
 
+      this.noteHeight = 5;
+      this.barWidth = 200;
+      this.beatWidth = this.barWidth / Tone.Transport.timeSignature;
+      this.tickWidth = this.beatWidth / Tone.Transport.PPQ;
+
+      this.containerWidth = (this.domNode.width() - this.head.width() - 45) * 25;
+      this.containerHeight = this.noteCount * this.noteHeight;
+
+      this.notesCanvas = $("<canvas>", { "class" : "notes" }).appendTo(this.contentContainer).bind('contextmenu', function(e){
+        return false;
+      });
+      this.notesCanvas.get(0).width = this.containerWidth;
+      this.notesCanvas.get(0).height = this.containerHeight;
+      this.noteStage = new createjs.Stage(this.notesCanvas.get(0));
     },
 
-    drawNotes: function(){
-      var barCount = 8;
-      var noteCount = 127;
-
-      var noteHeight = 3;
-      var barWidth = 200;
-      var beatWidth = barWidth / Tone.Transport.timeSignature;
-      var sixteenthWidth = beatWidth / 4;
-      var tickWidth = beatWidth / Tone.Transport.PPQ;
-
-      var containerWidth = (this.domNode.width() - this.head.width() - 45) * 25;
-      var containerHeight = noteCount * noteHeight;
-
-      this.notesCanvas = $("<canvas>", { "class" : "notes" }).appendTo(this.contentContainer);
-      this.notesCanvas.get(0).width = containerWidth;
-      this.notesCanvas.get(0).height = containerHeight;
-      this.noteStage = new createjs.Stage(this.notesCanvas.get(0));
-
-      for (var y = 0; y <= noteCount; y++){
+    drawGuideLines: function(){
+      for (var y = 0; y <= this.noteCount; y++){
         var lineX = new createjs.Shape();
         lineX.graphics.setStrokeStyle(1)
-             .beginStroke("dimgray")
-             .moveTo(0, y*noteHeight)
-             .lineTo(containerWidth, y*noteHeight);
+          .beginStroke("dimgray")
+          .moveTo(0, y*this.noteHeight)
+          .lineTo(this.containerWidth, y*this.noteHeight);
         this.noteStage.addChild(lineX);
 
-        for (var x = 0; x <= barCount; x++){
+        for (var x = 0; x <= this.barCount; x++){
           var lineY = new createjs.Shape();
           lineY.graphics.setStrokeStyle(1)
             .beginStroke("dimgray")
-            .moveTo(x * barWidth, 0)
-            .lineTo(x * barWidth, containerHeight);
+            .moveTo(x * this.barWidth, 0)
+            .lineTo(x * this.barWidth, this.containerHeight);
+          this.noteStage.addChild(lineY);
+        }
+
+        for (var x = 0; x <= this.beatCount; x++){
+          var lineY = new createjs.Shape();
+          lineY.graphics.setStrokeStyle(1)
+            .beginStroke("dimgray")
+            .moveTo(x * this.beatWidth, 0)
+            .lineTo(x * this.beatWidth, this.containerHeight);
           this.noteStage.addChild(lineY);
         }
       }
+    },
 
+    drawNote: function(note){
+      var noteTime = new Tone.TransportTime(note.value.time);
+      var noteDuration = new Tone.TransportTime(note.value.duration);
+
+      var noteShape = new createjs.Shape();
+
+      var _this = this;
+      var selected = false;
+      var drawShape = function(){
+        noteShape.graphics.clear().setStrokeStyle(1)
+          .beginStroke("black")
+          .beginFill(getColorForPercentage(note.value.velocity))
+          .drawRect(
+            noteTime.toTicks() * _this.tickWidth,
+            ((127 - note.value.midi) * _this.noteHeight) - _this.noteHeight,
+            noteDuration.toTicks() * _this.tickWidth,
+            _this.noteHeight
+          );
+      };
+
+      drawShape();
+      this.noteStage.addChild(noteShape);
+
+      noteShape.on("pressmove", function(evt) {
+        evt.target.x = evt.stageX;
+        evt.target.y = evt.stageY;
+        drawShape();
+        _this.drawStage();
+      });
+      noteShape.on("pressup", function(evt) { console.log("up"); })
+
+      note.shape = noteShape;
+    },
+
+    drawNotes: function(){
       for (var i = 0; i < this.part._events.length; i++){
         var note = this.part._events[i];
-
-        var noteTime = new Tone.TransportTime(note.value.time);
-        var noteDuration = new Tone.TransportTime(note.value.duration);
-
-        var x = noteTime.toTicks() * tickWidth;
-        var y = ((127 - note.value.midi) * noteHeight) - noteHeight;
-
-        var noteShape = new createjs.Shape();
-        noteShape.graphics.setStrokeStyle(1)
-          .beginStroke("red")
-          .beginFill("blue")
-          .drawRect(x, y, noteDuration.toTicks() * tickWidth, noteHeight);
-        this.noteStage.addChild(noteShape);
+        this.drawNote(note);
       }
+    },
 
+    drawStage: function(){
       this.noteStage.update();
+    },
+
+    drawNoteEditor: function(){
+      this.createCanvas();
+      this.drawGuideLines();
+      this.drawNotes();
+      this.drawStage();
     },
 
     toggleArmed: function(){
@@ -242,17 +301,7 @@ define([
         this.setupFXChain();
         this.setupInstrument();
 
-        var partCallback = function(time, note) {
-          if (App.playing)
-            this.instrument.source.triggerAttackRelease(
-              note.name,
-              note.duration,
-              time,
-              note.velocity
-            );
-        };
-
-        this.part = new Tone.Part(partCallback.bind(this), this.midi.notes);
+        this.part = new Tone.Part(this.instrument.playPart.bind(this.instrument), this.midi.notes);
       }
     },
 
