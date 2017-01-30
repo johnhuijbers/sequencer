@@ -29,11 +29,11 @@
 }
 
 .btn-enabled {
-    background: green;
+    background: gray;
     color: lawngreen;
 }
-.btn-enabled.disabled {
-    background: gray;
+.btn-enabled.enabled {
+    background: green;
 }
 .btn-armed {
     background: gray;
@@ -57,27 +57,6 @@
     font-size: 32px;
     line-height: 22px;
 }
-.slider {
-    width: 100%;
-    height: 30px;
-}
-.slider .scrub {
-    position: relative;
-    background: black;
-}
-.slider .knob{
-    background: white;
-    border-radius: 10px;
-    height: 15px;
-    width: 15px;
-    position: absolute;
-    top: 0px;
-    left: calc(100% - 15px);
-}
-
-.Dragger #Name {
-    display: none;
-}
 .Dragger {
     width: 15px;
     height: 15px;
@@ -87,4 +66,5 @@
     z-index: 1;
     margin-top: -2px;
     border: 2px solid white;
-    cursor: -webkit-grab; }
+    cursor: -webkit-grab;
+}

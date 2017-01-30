@@ -11,18 +11,24 @@
     <script type="text/javascript">
         TONE_SILENCE_VERSION_LOGGING = true;
     </script>
-	<script type="text/javascript" src="build/Tone.js"></script>
-	<script type="text/javascript" src="build/MidiConvert.js"></script>
-	<script type="text/javascript" src="scripts/jquery.min.js"></script>
-	<script type="text/javascript" src="scripts/draggabilly.js"></script>
-	<script type="text/javascript" src="scripts/StartAudioContext.js"></script>
-	<script type="text/javascript" src="scripts/qwerty-hancock.js"></script>
-    <script type="text/javascript" src="./scripts/Interface.js"></script>
+
+    <script data-main="js/main" src="scripts/require.js"></script>
+    <script src="scripts/qwerty-hancock.js"></script>
+
+    <script type="text/javascript">
+        require.config({
+            paths: {
+                'Tone': '../scripts/Tone',
+                'MidiConvert': '../scripts/MidiConvert',
+                'jquery': '../scripts/jquery.min',
+                'draggabilly': '../scripts/draggabilly',
+                'StartAudioContext': '../scripts/StartAudioContext'
+            }
+        });
+    </script>
     <link href="style/app.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
-	<script type="text/javascript" src="js/app.js"></script>
-
     <div id="main-menu" class="menu"></div>
     <div class="main-window">
         <div class="main-content">

@@ -45,7 +45,7 @@ body {
     height: 500px;
 }
 .track.selected .head {
-    background: blue;
+    background: #666;
 }
 .track.bus {
     height: 70px;
@@ -69,7 +69,7 @@ body {
     display: flex;
     flex-direction: row;
 }
-.notes-container {
+.content-container {
     float: right;
     width: calc(100% - 200px);
     height: 100%;
@@ -90,4 +90,15 @@ body {
 }
 .Slider {
     position: relative;
+    height: 25px;
+}
+.instruments {
+    display: none;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    background: rgba(0, 0, 0, 0.8);
+}
+.instruments.show {
+    display: block;
 }
