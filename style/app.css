@@ -38,7 +38,7 @@ body {
     width: 100%;
     background: #595959;
     border-bottom: 1px solid dimgray;
-    margin-bottom: 15px;
+    margin-bottom: 2px;
     position: relative;
 }
 .track.selected {
@@ -54,8 +54,9 @@ body {
     position: absolute;
     width: 200px;
     height: 100%;
-    border-right: 1px solid dimgray;
+    border-left: 1px solid dimgray;
     padding: 5px;
+    right: 0;
 }
 .track .head .label {
     text-transform: capitalize;
@@ -68,11 +69,16 @@ body {
 .track .head .top {
     display: flex;
     flex-direction: row;
+    padding: 2px;
+    background: #666;
 }
 .content-container {
-    float: right;
+    float: left;
     width: calc(100% - 200px);
     height: 100%;
+    overflow: hidden;
+}
+.track.selected .content-container {
     overflow: auto;
 }
 .track .head .meter {
@@ -101,4 +107,16 @@ body {
 }
 .instruments.show {
     display: block;
+}
+
+.transport {
+    display: flex;
+}
+.transport .play-menu {
+    width: 30vw;
+    flex-grow: 30;
+}
+.transport .sliders {
+    width: 70vw;
+    flex-grow: 70;
 }

@@ -26,9 +26,6 @@ define([
       this.tracks = new TrackContainer();
       this.tracks.init();
 
-      this.tracks.add(TrackType.Bus);
-      this.tracks.add(TrackType.Bus);
-
       this.initTransport();
       this.initKeyboard();
       this.initMenu();
@@ -43,6 +40,7 @@ define([
     importMidi: function(midi) {
       Tone.Transport.bpm.value = midi.header.bpm;
       Tone.Transport.timeSignature = midi.header.timeSignature;
+      Tone.Transport.PPQ = midi.header.PPQ;
 
       for (var i = 0; i < midi.tracks.length; i++){
         this.tracks.add(TrackType.MIDI, midi.tracks[i]);
@@ -110,7 +108,6 @@ define([
 
       this.menuNode.append(viewDropdown.domNode);
     },
-
     initKeyboard: function(){
       var keyboard = new QwertyHancock({
         id: "keyboard",
@@ -127,7 +124,6 @@ define([
       keyboard.keyDown = this.onKeyDown.bind(this);
       keyboard.keyUp = this.onKeyUp.bind(this);
     },
-
     onKeyDown: function(note, frequency){
       this.tracks.forEach(function(track){
         if (this.armed){
@@ -135,7 +131,6 @@ define([
         }
       });
     },
-
     onKeyUp: function (){
       this.tracks.forEach(function(track){
         if (track.armed){

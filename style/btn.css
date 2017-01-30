@@ -42,6 +42,9 @@
     background: green;
     color: lawngreen;
 }
+body.playing .transport .btn-play {
+    color: white;
+}
 
 .transport .btn {
     width: 70px;
@@ -56,6 +59,10 @@
 .transport .btn-stop {
     font-size: 32px;
     line-height: 22px;
+}
+
+.transport .btn-seek {
+    width: 35px;
 }
 .Dragger {
     width: 15px;

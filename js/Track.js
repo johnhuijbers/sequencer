@@ -100,60 +100,64 @@ define([
         this.drawNotes();
     },
 
+    createCanvas: function(){
+
+    },
+
     drawNotes: function(){
+      var barCount = 8;
+      var noteCount = 127;
 
-      var notes = 127;
-      var noteWidth16th = 2;
-      var noteHeight = 20;
-
-      var barWidth = 50;
+      var noteHeight = 3;
+      var barWidth = 200;
       var beatWidth = barWidth / Tone.Transport.timeSignature;
       var sixteenthWidth = beatWidth / 4;
+      var tickWidth = beatWidth / Tone.Transport.PPQ;
 
       var containerWidth = (this.domNode.width() - this.head.width() - 45) * 25;
+      var containerHeight = noteCount * noteHeight;
 
-      this.notesCanvas = $("<canvas>",{ "class" : "notes" }).appendTo(this.contentContainer);
-
+      this.notesCanvas = $("<canvas>", { "class" : "notes" }).appendTo(this.contentContainer);
       this.notesCanvas.get(0).width = containerWidth;
-      this.notesCanvas.get(0).height = notes * noteHeight;
+      this.notesCanvas.get(0).height = containerHeight;
+      this.noteStage = new createjs.Stage(this.notesCanvas.get(0));
 
-      var ctx = this.notesCanvas.get(0).getContext("2d");
-      //context.fillStyle = "green";
+      for (var y = 0; y <= noteCount; y++){
+        var lineX = new createjs.Shape();
+        lineX.graphics.setStrokeStyle(1)
+             .beginStroke("dimgray")
+             .moveTo(0, y*noteHeight)
+             .lineTo(containerWidth, y*noteHeight);
+        this.noteStage.addChild(lineX);
 
-      for (var i = 0; i < notes; i++){
-        ctx.beginPath();
-        ctx.moveTo(0, i*noteHeight);
-        ctx.lineWidth = 1;
-        ctx.strokeStyle = 'dimgray';
-        ctx.lineTo(containerWidth, i*noteHeight);
-        ctx.stroke();
+        for (var x = 0; x <= barCount; x++){
+          var lineY = new createjs.Shape();
+          lineY.graphics.setStrokeStyle(1)
+            .beginStroke("dimgray")
+            .moveTo(x * barWidth, 0)
+            .lineTo(x * barWidth, containerHeight);
+          this.noteStage.addChild(lineY);
+        }
       }
 
       for (var i = 0; i < this.part._events.length; i++){
         var note = this.part._events[i];
 
         var noteTime = new Tone.TransportTime(note.value.time);
-        var time = noteTime.toBarsBeatsSixteenths();
+        var noteDuration = new Tone.TransportTime(note.value.duration);
 
-        var bars = parseInt(time.split(':')[0]);
-        var beats = parseInt(time.split(':')[1]);
-        var sixteents = parseInt(time.split(':')[2]);
-        var ticks = parseInt(time.split(':')[3]);
+        var x = noteTime.toTicks() * tickWidth;
+        var y = ((127 - note.value.midi) * noteHeight) - noteHeight;
 
-        var y = note.value.midi * noteHeight;
-        var x = bars * barWidth;
-
-        ctx.beginPath();
-        ctx.rect(x, y, x + noteWidth16th, y + noteHeight);
-        ctx.fillStyle = getRandomColor();
-        ctx.fill();
-
-//
-//      var x = note.value.time * 5;
-//      var y = note.value.midi;
-//      ctx.fillRect(x, y, x + noteWidth, y + noteHeight);
-//      return;
+        var noteShape = new createjs.Shape();
+        noteShape.graphics.setStrokeStyle(1)
+          .beginStroke("red")
+          .beginFill("blue")
+          .drawRect(x, y, noteDuration.toTicks() * tickWidth, noteHeight);
+        this.noteStage.addChild(noteShape);
       }
+
+      this.noteStage.update();
     },
 
     toggleArmed: function(){
@@ -182,7 +186,8 @@ define([
       if (this.part)
         this.part.stop();
 
-      this.instrument.source.releaseAll();
+      if (this.instrument && this.instrument.source)
+        this.instrument.source.releaseAll();
     },
 
     init: function(){
@@ -238,7 +243,13 @@ define([
         this.setupInstrument();
 
         var partCallback = function(time, note) {
-          this.instrument.source.triggerAttackRelease(note.name, note.duration, time, note.velocity);
+          if (App.playing)
+            this.instrument.source.triggerAttackRelease(
+              note.name,
+              note.duration,
+              time,
+              note.velocity
+            );
         };
 
         this.part = new Tone.Part(partCallback.bind(this), this.midi.notes);
