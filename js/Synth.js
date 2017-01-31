@@ -24,6 +24,16 @@ define([
   };
 
   Synth.prototype = {
+    playPart: function(time, note) {
+      if (App.playing){
+        this.source.triggerAttackRelease(
+          note.name,
+          note.duration,
+          time,
+          note.velocity
+        );
+      }
+    },
     createUI: function(){
       this.domNode = $("<div />").addClass("synth");
 

@@ -30,7 +30,9 @@ define([
       this.initKeyboard();
       this.initMenu();
 
-      this.loadProject("midi/bwv772.mid");
+      //this.loadProject("track.mid")
+      this.tracks.add(TrackType.MIDI);
+
     },
 
     loadProject: function(file){
@@ -54,11 +56,28 @@ define([
     initMenu: function(){
       this.menuNode = $("#main-menu");
 
+      var _this = this;
       var fileDropdown = new Interface.Dropdown({
         name: "File",
         actions: {
           "New...": function(){},
-          "Open...": function(){},
+          "Open...": function(){
+            $('<input type="file" multiple>').on('change', function () {
+              var reader = new FileReader();
+
+              var f = this.files.item(0);
+              // Closure to capture the file information.
+              reader.onload = (function(theFile) {
+                return function(e) {
+                  _this.importMidi(MidiConvert.parse(e.target.result));
+                };
+              })(f);
+
+              // Read in the image file as a data URL.
+              reader.readAsArrayBuffer(f);
+
+            }).click();
+          },
           "Save as...": function(){},
           "Save": function(){},
           "Exit": function(){}
@@ -109,7 +128,7 @@ define([
       this.menuNode.append(viewDropdown.domNode);
     },
     initKeyboard: function(){
-      var keyboard = new QwertyHancock({
+      this.keyboard = new QwertyHancock({
         id: "keyboard",
         width: $("#keyboard").parent().width(),
         height: 150,

@@ -2,7 +2,7 @@ define([
   "Tone",
   "jquery",
   "./TrackType",
-  "./SubtractorSynth",
+  "./Synth",
   "./Interface"
 ], function(
   Tone,
@@ -112,30 +112,72 @@ define([
 
       loop();
 
-      if (this.part)
-        this.drawNoteEditor();
+      this.drawNoteEditor();
     },
 
     createCanvas: function(){
       this.midiDuration = new Tone.TransportTime(this.midi.duration);
       this.barCount = parseInt(this.midiDuration.toBarsBeatsSixteenths().split(':')[0])+1;
       this.beatCount = this.barCount * Tone.Transport.timeSignature;
+      this.sixteenthCount = this.beatCount * 4;
+      this.eightCount = this.beatCount * 2;
       this.noteCount = 127;
 
-      this.noteHeight = 5;
-      this.barWidth = 200;
+      this.noteHeight = 10;
+      this.barWidth = 300;
       this.beatWidth = this.barWidth / Tone.Transport.timeSignature;
+      this.sixteenthWidth = this.beatWidth / 4;
+      this.eightWidth = this.sixteenthWidth * 2;
       this.tickWidth = this.beatWidth / Tone.Transport.PPQ;
+      this.partWidth = this.barCount * this.barWidth;
 
-      this.containerWidth = (this.domNode.width() - this.head.width() - 45) * 25;
+      this.drawRes = this.sixteenthWidth;
+      this.drawResCount = this.sixteenthCount;
+
+      this.containerWidth = this.domNode.width();
       this.containerHeight = this.noteCount * this.noteHeight;
 
-      this.notesCanvas = $("<canvas>", { "class" : "notes" }).appendTo(this.contentContainer).bind('contextmenu', function(e){
-        return false;
-      });
+      if (this.notesCanvas){
+        this.notesCanvas.remove();
+      }
+
+      this.notesCanvas = $("<canvas>", { "class" : "notes" });
+      this.notesCanvas.appendTo(this.contentContainer);
+      this.notesCanvas.bind('contextmenu', function(e){ return false; });
+
       this.notesCanvas.get(0).width = this.containerWidth;
       this.notesCanvas.get(0).height = this.containerHeight;
       this.noteStage = new createjs.Stage(this.notesCanvas.get(0));
+      this.camera = new createjs.Container();
+      this.noteStage.addChild(this.camera);
+
+      this.noteStage.on("stagemouseup", this.onNoteStageClick.bind(this));
+    },
+
+    m2f: function (midi) {
+      var tuning = 440;
+      return Math.pow(2, (midi - 69) / 12) * (tuning || 440)
+    },
+
+    onNoteStageClick: function(evt) {
+      var x = Math.floor(evt.stageX / this.drawRes) * this.drawRes;
+      var y = Math.floor(evt.stageY / this.noteHeight) * this.noteHeight;
+
+      var midi = (this.noteCount - Math.round(this.noteCount * (y / this.containerHeight))) - 1;
+      var startInTicks = Math.round(x / this.tickWidth);
+      var durationInTicks = Math.round(this.drawRes / this.tickWidth);
+
+      var noteTime = new Tone.TransportTime(startInTicks + "i");
+      var durationTime = new Tone.TransportTime(durationInTicks + "i");
+      this.midi.note(midi, noteTime.toSeconds(), durationTime.toSeconds());
+
+      this.instrument.source.triggerAttackRelease(this.m2f(midi), 0.25);
+      if (this.instrument.filterEnv)
+        this.instrument.filterEnv.triggerAttackRelease(0.25);
+
+      this.setupPart();
+      this.drawNoteEditor();
+
     },
 
     drawGuideLines: function(){
@@ -144,25 +186,16 @@ define([
         lineX.graphics.setStrokeStyle(1)
           .beginStroke("dimgray")
           .moveTo(0, y*this.noteHeight)
-          .lineTo(this.containerWidth, y*this.noteHeight);
-        this.noteStage.addChild(lineX);
+          .lineTo(this.partWidth, y*this.noteHeight);
+        this.camera.addChild(lineX);
 
-        for (var x = 0; x <= this.barCount; x++){
+        for (var x = 0; x <= this.drawResCount; x++){
           var lineY = new createjs.Shape();
           lineY.graphics.setStrokeStyle(1)
             .beginStroke("dimgray")
-            .moveTo(x * this.barWidth, 0)
-            .lineTo(x * this.barWidth, this.containerHeight);
-          this.noteStage.addChild(lineY);
-        }
-
-        for (var x = 0; x <= this.beatCount; x++){
-          var lineY = new createjs.Shape();
-          lineY.graphics.setStrokeStyle(1)
-            .beginStroke("dimgray")
-            .moveTo(x * this.beatWidth, 0)
-            .lineTo(x * this.beatWidth, this.containerHeight);
-          this.noteStage.addChild(lineY);
+            .moveTo(x * this.drawRes, 0)
+            .lineTo(x * this.drawRes, this.containerHeight);
+          this.camera.addChild(lineY);
         }
       }
     },
@@ -171,34 +204,38 @@ define([
       var noteTime = new Tone.TransportTime(note.value.time);
       var noteDuration = new Tone.TransportTime(note.value.duration);
 
-      var noteShape = new createjs.Shape();
+      note.shape = new createjs.Shape();
+      this.camera.addChild(note.shape);
 
       var _this = this;
-      var selected = false;
-      var drawShape = function(){
-        noteShape.graphics.clear().setStrokeStyle(1)
+      var drawShape = function(x, y){
+         note.shape.graphics.clear().setStrokeStyle(1)
           .beginStroke("black")
           .beginFill(getColorForPercentage(note.value.velocity))
           .drawRect(
-            noteTime.toTicks() * _this.tickWidth,
-            ((127 - note.value.midi) * _this.noteHeight) - _this.noteHeight,
+            0, 0,
             noteDuration.toTicks() * _this.tickWidth,
             _this.noteHeight
           );
+
+        note.shape.x = x;
+        note.shape.y = y;
       };
 
-      drawShape();
-      this.noteStage.addChild(noteShape);
+      var startX = noteTime.toTicks() * _this.tickWidth;
+      var startY = ((this.noteCount - note.value.midi) * _this.noteHeight) - _this.noteHeight;
+      drawShape(startX, startY);
 
-      noteShape.on("pressmove", function(evt) {
-        evt.target.x = evt.stageX;
-        evt.target.y = evt.stageY;
-        drawShape();
+      var pressMove = function(evt) {
+        var x = Math.floor(evt.stageX / this.drawRes) * this.drawRes;
+        var y = Math.floor(evt.stageY / this.noteHeight) * this.noteHeight;
+
+        drawShape(x, y);
+
         _this.drawStage();
-      });
-      noteShape.on("pressup", function(evt) { console.log("up"); })
+      };
 
-      note.shape = noteShape;
+      note.shape.on("pressmove", pressMove.bind(this));
     },
 
     drawNotes: function(){
@@ -257,9 +294,6 @@ define([
 
       if (this.type == TrackType.MIDI){
         this.addArmButton();
-      }
-
-      if (this.type == TrackType.MIDI){
         this.initAudio();
         this.createInstrumentsPane();
       }
@@ -300,9 +334,12 @@ define([
       else if (this.type == TrackType.MIDI){
         this.setupFXChain();
         this.setupInstrument();
-
-        this.part = new Tone.Part(this.instrument.playPart.bind(this.instrument), this.midi.notes);
+        this.setupPart();
       }
+    },
+
+    setupPart: function(){
+      this.part = new Tone.Part(this.instrument.playPart.bind(this.instrument), this.midi.notes);
     },
 
     createInstrumentsPane: function(){
@@ -336,8 +373,8 @@ define([
       this.top.append(this.label);
 
       this.label.on("click", function(){
-        $(".track").removeClass("selected");
-        self.domNode.addClass("selected");
+        $(".track").not(self.domNode).removeClass("selected");
+        self.domNode.toggleClass("selected");
       });
 
       if (this.type == TrackType.MIDI){
